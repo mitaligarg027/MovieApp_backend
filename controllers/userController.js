@@ -6,10 +6,23 @@ const bcrypt = require('bcrypt');
 const User = require("../models/userModel");
 const { response } = require('express');
 const { createTokenForUser } = require('../services/auth');
+const { isValidEmail, isValidPassword } = require('../services/validation')
 
 
 async function handlecreateNewUser(req, res) {
     const { Name, email, password } = req.body;
+    if (!isValidEmail(email)) {
+        return res.status(400).json({ status: "false", message: "Please enter a valid email address" })
+    }
+    if (!isValidPassword(password)) {
+        return res.status(400).json({ status: "false", message: "Password should be at least 8 characters long, contain at least one uppercase, one lowercase letter,one digit, and one special character." })
+    }
+    if (!email || !password) {
+        return res.status(400).send({
+            message: "Email or password missing."
+        })
+    }
+
     try {
         const existingUser = await User.findOne({ email })
         if (existingUser) {
@@ -17,7 +30,7 @@ async function handlecreateNewUser(req, res) {
         }
 
         const salt = await bcrypt.genSalt(10); //generates salt
-        const secPass = await bcrypt.hash(req.body.password, salt)
+        const secPass = await bcrypt.hash(req.body.password, salt)//secure password
         const newUser = await User.create({
             Name,
             email,
@@ -32,20 +45,25 @@ async function handlecreateNewUser(req, res) {
 }
 async function handleUserLogin(req, res) {
     const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).send({
+            message: "Email or password missing."
+        })
+    }
+
     try {
         const user = await User.findOne({ email });
         if (!user) {
             console.log("user not found")
-            return res.status(400).json({ error: "Invalid credentials" })
+            return res.status(400).json({ message: "Invalid credentials" })
         }
-        const passwordCompare = bcrypt.compare(password, user.password)
+        const passwordCompare = await bcrypt.compare(password, user.password)
+        console.log("passwordcompare", passwordCompare)
         if (!passwordCompare) {
-            console.log("password")
-            return res.status(400).json({ error: "Invalid credentials" })
+            return res.status(400).json({ status: "false", message: "Invalid credentials" })
         }
         const token = createTokenForUser(user);
-        console.log("token")
-        return res.status(200).json(token);
+        return res.status(200).json({ status: "true", message: "Login successfull", token: token });
 
     }
     catch (err) {
@@ -65,6 +83,9 @@ async function handleGetUserById(req, res) {
         console.error(err.message);
         res.status(500).send("Internal server error")
     }
+}
+async function handleLogout(req, res) {
+    
 }
 
 module.exports = {

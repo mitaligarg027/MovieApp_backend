@@ -1,6 +1,6 @@
 const express = require('express');
 const { handlecreateNewUser, handleUserLogin, handleGetUserById } = require('../controllers/userController');
-const { validateToken } = require('../services/auth');
+// const { validateToken } = require('../services/auth');
 // const { } = require()
 const router = express.Router()
 

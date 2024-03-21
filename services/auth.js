@@ -9,12 +9,25 @@ function createTokenForUser(user) {
     return token;
 }
 
-// function validateToken(token) {
-//     const payload = JWT.verify(token, secret);
-//     return payload;
-// }
+function validateToken(token) {
+    console.log("tokens", token)
+    if (!token) return null;
+    try {
+        const payload = JWT.verify(token, secret);
+        // console.log(payload)
+        if (!payload) {
+            return false
+
+        }
+        return true;
+
+    }
+    catch (err) {
+        return false
+    }
+}
 
 module.exports = {
     createTokenForUser,
-    // validateToken
+    validateToken
 }

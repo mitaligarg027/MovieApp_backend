@@ -9,10 +9,13 @@ const movieSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    createdBy: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'user'
+    poster: {
+        type: String
     }
+    // createdBy: {
+    //     type: mongoose.Schema.ObjectId,
+    //     ref: 'user'
+    // }
 },
     {
         timestamps: true
