@@ -1,21 +1,33 @@
 const { response } = require('express');
 const Movie = require('../models/movieModel')
+const mongoose = require('mongoose')
+
+const isValidObjectId = (id) => {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return false;
+    }
+    return true;
+};
+
 async function handleCreateNewMovie(req, res) {
 
     // console.log(req)
+    console.log("location", req.file)
+    console.log("location", req.body)
     try {
+
         const { title, publishingYear } = req.body;
-        console.log(req.body.title)
+
         const movieExist = await Movie.find({ title })
-        // console.log(movieExist.length)
+
         if (movieExist.length !== 0) {
             return res.status(400).json({ message: "Movie already exists" })
         }
         const newMovie = await Movie.create({
             title,
             publishingYear,
-            profileImg: req.file.filename
-            // creadedBy: req.user.id,
+            poster: req.file ? `http://localhost:3000/uploads/${req.file.filename}` : null
+
         })
 
         return res.status(200).json({ status: "true", message: "Movie created successfully", movie: newMovie })
@@ -28,24 +40,40 @@ async function handleCreateNewMovie(req, res) {
 
 async function handleEditMovie(req, res) {
     const { title, publishingYear, movieId } = req.body
-    const findMovie = await Movie.findById({ _id: movieId })
-    if (!findMovie) {
-        return res.status(400).json({ message: 'Movie not found' })
-    }
-    const editedMovie = await Movie.updateOne({
-        _id: movieId
-    }, {
-        $set: {
-            title,
-            publishingYear
-
+    console.log(req)
+    if (isValidObjectId(movieId)) {
+        const findMovie = await Movie.findById({ _id: movieId })
+        if (!findMovie) {
+            return res.status(400).json({ message: 'Movie not found' })
         }
-    })
-    return res.json({ status: "true", message: "Movie updated successfully", editedMovie: findMovie })
+        try {
+            const editedMovie = await Movie.updateOne({
+                _id: movieId
+            }, {
+                $set: {
+                    title,
+                    publishingYear,
+                    poster: req.file ? `http://localhost:3000/uploads/${req.file.filename}` : req.body.poster
+
+                }
+            })
+            return res.json({ status: "true", message: "Movie updated successfully", editedMovie: findMovie })
+        }
+        catch (err) {
+            return res.status(400).json({ status: false, message: err.message })
+        }
+    }
+    else {
+        return res.status(400).json({ status: false, message: "Invalid Movie ID" })
+    }
+
+
+
 }
 
 async function handleDeleteMovie(req, res) {
     const { movieId } = req.body;
+
     const findMovie = await Movie.findById({ _id: movieId })
     if (!findMovie) {
         return res.status(400).json({ message: 'Movie not found' })
