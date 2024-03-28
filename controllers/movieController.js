@@ -11,9 +11,7 @@ const isValidObjectId = (id) => {
 
 async function handleCreateNewMovie(req, res) {
 
-    // console.log(req)
-    console.log("location", req.file)
-    console.log("location", req.body)
+
     try {
 
         const { title, publishingYear } = req.body;
@@ -33,14 +31,14 @@ async function handleCreateNewMovie(req, res) {
         return res.status(200).json({ status: "true", message: "Movie created successfully", movie: newMovie })
     }
     catch (err) {
-        console.log("err", err);
+
         response.json({ message: err })
     }
 }
 
 async function handleEditMovie(req, res) {
     const { title, publishingYear, movieId } = req.body
-    console.log(req)
+
     if (isValidObjectId(movieId)) {
         const findMovie = await Movie.findById({ _id: movieId })
         if (!findMovie) {
@@ -104,17 +102,30 @@ async function handleGetAllMovies(req, res) {
 
 async function handleGetMovieById(req, res) {
     // console.log(req, params.id)
-    const movie_by_id = await Movie.findOne({ _id: req.params.id });
-    if (!movie_by_id) {
-        return res.status(400).json({ message: 'Movie not found' })
+    try {
+
+        const { query } = req.body
+
+        const movie = await Movie.find({ title: { $regex: query, $options: 'i' } })
+
+        if (movie.length === 0) {
+            return res.status(400).json({ status: "false", message: 'Movie not found' })
+        }
+        return res.status(200).json({ status: "true", message: "Record fetched!", movies: movie })
     }
-    return res.status(200).json({ status: "true", message: "Record fetched!", movie: movie_by_id })
+    catch (err) {
+
+        res.status(500).json({ status: "false", message: err.message })
+    }
 }
+
+
 
 module.exports = {
     handleCreateNewMovie,
     handleEditMovie,
     handleDeleteMovie,
     handleGetAllMovies,
-    handleGetMovieById
+    handleGetMovieById,
+
 }

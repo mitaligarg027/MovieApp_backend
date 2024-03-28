@@ -39,7 +39,7 @@ async function handlecreateNewUser(req, res) {
         return res.status(200).json({ status: "user created successfully", newUser });
     }
     catch (err) {
-        console.log("error", err)
+
         return res.status(500).json({ error: err });
     }
 }
@@ -58,11 +58,12 @@ async function handleUserLogin(req, res) {
             return res.status(400).json({ message: "Invalid credentials" })
         }
         const passwordCompare = await bcrypt.compare(password, user.password)
-        console.log("passwordcompare", passwordCompare)
+
         if (!passwordCompare) {
             return res.status(400).json({ status: "false", message: "Invalid credentials" })
         }
         const token = createTokenForUser(user);
+
         return res.status(200).json({ status: "true", message: "Login successfull", token: token });
 
     }
@@ -84,12 +85,29 @@ async function handleGetUserById(req, res) {
         res.status(500).send("Internal server error")
     }
 }
-async function handleLogout(req, res) {
-    
+async function handleGetAllUsers(req, res) {
+    try {
+        const users = await User.find({});
+        return res.status(200).json({ status: 'true', users: users })
+    }
+    catch (err) {
+        return res.status(500).send('internal server error')
+    }
 }
+async function handleLogout(req, res) {
+    if (req.user) {
+        req.user = null;
 
+        return res.status(200).json({ status: 'true', message: 'Logged out successfully' });
+    }
+    else {
+        return res.status(400).json({ status: 'false', message: 'Unauthorized' })
+    }
+}
 module.exports = {
     handlecreateNewUser,
     handleUserLogin,
-    handleGetUserById
+    handleGetUserById,
+    handleLogout,
+    handleGetAllUsers
 }

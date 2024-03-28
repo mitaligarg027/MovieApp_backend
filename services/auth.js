@@ -10,11 +10,11 @@ function createTokenForUser(user) {
 }
 
 function validateToken(token) {
-    console.log("tokens", token)
+
     if (!token) return null;
     try {
         const payload = JWT.verify(token, secret);
-        // console.log(payload)
+        console.log(payload)
         if (!payload) {
             return false
 
